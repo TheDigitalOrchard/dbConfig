@@ -23,7 +23,7 @@ class DbConfigServiceProvider extends ServiceProvider
     {
         $this->publishes([
 	        // publish migrations during vendor:publish
-		    realpath(__DIR__.'/../../migrations') => $this->app->databasePath().'/migrations',
+		    realpath(__DIR__.'/migrations') => $this->app->databasePath().'/migrations',
 		]);
     }
 

@@ -21,7 +21,10 @@ class DbConfigServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->package('terbium/db-config');
+        $this->publishes([
+	        // publish migrations during vendor:publish
+		    realpath(__DIR__.'/../../migrations') => $this->app->databasePath().'/migrations',
+		]);
     }
 
     /**
@@ -59,8 +62,6 @@ class DbConfigServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-
         return array('db-config');
     }
-
 }

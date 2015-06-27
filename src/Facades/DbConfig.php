@@ -12,4 +12,3 @@ class DbConfig extends Facade {
     protected static function getFacadeAccessor() { return 'db-config'; }
 
 }
-

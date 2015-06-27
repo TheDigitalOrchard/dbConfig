@@ -34,7 +34,6 @@ class DbConfigServiceProvider extends ServiceProvider
      */
     public function register()
     {
-
         $this->app['db-config'] = $this->app->share(
             function ($app) {
 
@@ -48,7 +47,6 @@ class DbConfigServiceProvider extends ServiceProvider
 
         $this->app->booting(
             function () {
-
                 $loader = \Illuminate\Foundation\AliasLoader::getInstance();
                 $loader->alias('DbConfig', 'Terbium\DbConfig\Facades\DbConfig');
             }

@@ -6,7 +6,6 @@ use Terbium\DbConfig\Exceptions\SaveException;
 
 class DbConfig
 {
-
     /**
      * The database provider.
      *
@@ -21,7 +20,6 @@ class DbConfig
      */
     protected $environment;
 
-
     /**
      * All of the configuration items from DB.
      *
@@ -29,12 +27,12 @@ class DbConfig
      */
     protected $items = array();
 
-
     /**
+	 * A reference to the default app config
+	 *
      * @var
      */
-    private $origConfig;
-
+    private $config;
 
     /**
      * The after load callbacks for namespaces.
@@ -43,20 +41,18 @@ class DbConfig
      */
     protected $afterLoad = array();
 
-
     /**
-     * @param $origConfig
+     * @param $config
      * @param $environment
      * @param DbProviderInterface $dbProvider
      */
-    public function __construct(&$origConfig, $environment, DbProviderInterface $dbProvider)
+    public function __construct(&$config, $environment, DbProviderInterface $dbProvider)
     {
-
-        $this->dbProvider = $dbProvider;
-
-        $this->origConfig = $origConfig;
+        $this->config = $config;
 
         $this->environment = $environment;
+
+        $this->dbProvider = $dbProvider;
     }
 
 
@@ -68,7 +64,6 @@ class DbConfig
      */
     public function has($key, $fallback = true)
     {
-
         $default = microtime(true);
 
         return $this->get($key, $default, $fallback) !== $default;
@@ -85,15 +80,13 @@ class DbConfig
      */
     public function get($key, $default = null, $fallback = true)
     {
-
-        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
+        list($namespace, $group, $item) = $this->config->parseKey($key);
 
         $collection = $this->getCollection($group, $namespace);
 
         $this->load($group, $namespace, $collection);
 
         $result =  array_get($this->items[$collection], $item, $default);
-
 
         // found one in DB
         if ($result !== $default) return $result;
@@ -103,7 +96,7 @@ class DbConfig
             return $default;
         }
 
-        return $this->origConfig->get($key, $default);
+        return $this->config->get($key, $default);
     }
 
     /**
@@ -115,7 +108,6 @@ class DbConfig
      */
     protected function getCollection($group, $namespace = null)
     {
-
         $namespace = $namespace ? : '*';
 
         return $namespace . '::' . $group;
@@ -133,7 +125,6 @@ class DbConfig
      */
     protected function load($group, $namespace, $collection)
     {
-
         $env = $this->environment;
 
         // If we've already loaded this collection, we will just bail out since we do
@@ -150,9 +141,7 @@ class DbConfig
         // not want to load it again. Once items are loaded a first time they will
         // stay kept in memory within this class and not loaded from disk again.
 
-
-        $this->afterLoad = $this->origConfig->getAfterLoadCallbacks();
-
+        $this->afterLoad = $this->config->getAfterLoadCallbacks();
 
         if (isset($this->afterLoad[$namespace])) {
             $items = $this->callAfterLoad($namespace, $group, $items);
@@ -171,10 +160,9 @@ class DbConfig
      */
     protected function callAfterLoad($namespace, $group, $items)
     {
-
         $callback = $this->afterLoad[$namespace];
 
-        return call_user_func($callback, $this->origConfig, $group, $items);
+        return call_user_func($callback, $this->config, $group, $items);
     }
 
 
@@ -191,13 +179,12 @@ class DbConfig
      */
     public function store($key, $value, $environment = null)
     {
-
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
         }
 
-        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
+        list($namespace, $group, $item) = $this->config->parseKey($key);
 
         if (is_null($item)) {
             throw new SaveException('The key should contain a group');
@@ -211,9 +198,7 @@ class DbConfig
         $this->dbProvider->store($dbkey, $value, $environment);
 
         //set value to config
-        $this->origConfig->set($key, $value);
-
-
+        $this->config->set($key, $value);
     }
 
     /**
@@ -228,13 +213,12 @@ class DbConfig
      */
     public function forget($key, $environment = null)
     {
-
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
         }
 
-        list($namespace, $group, $item) = $this->origConfig->parseKey($key);
+        list($namespace, $group, $item) = $this->config->parseKey($key);
 
         if (is_null($item)) {
             throw new SaveException('The key should contain a group');
@@ -248,8 +232,7 @@ class DbConfig
         $this->dbProvider->forget($dbkey, $environment);
 
         // remove item from original config
-        $this->origConfig->offsetUnset($key);
-
+        $this->config->offsetUnset($key);
     }
 
     /**
@@ -257,7 +240,6 @@ class DbConfig
      */
     public function clear()
     {
-
         $this->items = array();
     }
 
@@ -266,7 +248,6 @@ class DbConfig
      */
     public function clearDb()
     {
-
         $this->dbProvider->clear();
 
     }
@@ -282,7 +263,6 @@ class DbConfig
 
     public function listDb($wildcard = null, $environment = null)
     {
-
         // Default to the current environment.
         if (is_null($environment)) {
             $environment = $this->environment;
@@ -302,10 +282,6 @@ class DbConfig
      */
     public function __call($name, $arguments)
     {
-
-        return call_user_func_array(array($this->origConfig, $name), $arguments);
-
+        return call_user_func_array(array($this->config, $name), $arguments);
     }
-
-
 }
